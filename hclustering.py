@@ -60,7 +60,6 @@ numToPoint = {}
 for i in range(0, len(my_df)):
 	curRow = my_df.loc[i]
 	curList = []
-	print(curRow)
 	for j in range(len(curRow)):
 		if(curRow.iloc[j] != ' '):
 			curList.append(curRow.iloc[j])
@@ -92,7 +91,6 @@ for i in range(len(my_df) - 1):
 #combine the clusters
 totalLen = len(listNums)
 for t in range(0, totalLen - 1):
-	print(distanceMatrix)
 	biggerIndex = max(minI, minJ)
 	smallerIndex = min(minI, minJ)
 	savedRow = distanceMatrix.loc[biggerIndex]
@@ -191,5 +189,7 @@ else:
 	node.set("height", "{:.4f}".format(finTree.n2.height))
 	root.append(node)
 	recurseTree(finTree.n2, node)
-blah = ET.tostring(root, pretty_print = True).decode()
-print(blah)
+answerString = ET.tostring(root, pretty_print = True).decode()
+f = open("answerXML.xml", "w")
+f.write(answerString)
+f.close()

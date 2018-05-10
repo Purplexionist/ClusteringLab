@@ -1,0 +1,55 @@
+<tree height="309.0785">
+  <node height="171.3000">
+    <node height="80.5416">
+      <node height="22.7616">
+        <node height="9.7307">
+          <node height="2.2793">
+            <node height="1.0439">
+              <leaf height="0" data="130.916, 4.659, 2.2562"/>
+              <leaf height="0" data="130.07, 4.79, 2.1893"/>
+            </node>
+            <leaf height="0" data="132.2, 4.7, 2.13"/>
+          </node>
+          <leaf height="0" data="135.6, 1.0, 2.6"/>
+        </node>
+        <node height="0.0000">
+          <leaf height="0" data="115.072, 2.6660000000000004, 3.1676"/>
+          <leaf height="0" data="115.072, 2.6660000000000004, 3.1676"/>
+        </node>
+      </node>
+      <node height="46.7700">
+        <node height="15.0200">
+          <leaf height="0" data="153.1, 6.5, 2.45"/>
+          <leaf height="0" data="164.1, 10.0, 1.93"/>
+        </node>
+        <leaf height="0" data="194.6, 1.8, 3.02"/>
+      </node>
+    </node>
+    <node height="66.6300">
+      <node height="23.4400">
+        <node height="11.9030">
+          <node height="5.3930">
+            <node height="0.0016">
+              <leaf height="0" data="80.804, 4.622, 2.189"/>
+              <leaf height="0" data="80.804, 4.622, 2.1906"/>
+            </node>
+            <leaf height="0" data="78.1, 6.6, 2.9"/>
+          </node>
+          <leaf height="0" data="69.6, 4.7, 2.81"/>
+        </node>
+        <leaf height="0" data="89.9, 2.1, 3.35"/>
+      </node>
+      <node height="32.5300">
+        <node height="6.1583">
+          <leaf height="0" data="59.9, 5.7, 2.79"/>
+          <leaf height="0" data="55.144, 4.542, 3.0343"/>
+        </node>
+        <leaf height="0" data="34.2, 12.5, 2.82"/>
+      </node>
+    </node>
+  </node>
+  <node height="2.0110">
+    <leaf height="0" data="338.333, 16.773, 2.7465"/>
+    <leaf height="0" data="339.625, 16.067, 2.7335"/>
+  </node>
+</tree>
