@@ -2,6 +2,28 @@ import numpy as np
 import pandas as pd
 import sys
 import read_file as rf
+from lxml import etree as ET
+
+class Leaf:
+	def __init__(self, height, data):
+		self.height = height
+		self.data = data
+
+class Node:
+	def __init__(self, height):
+		self.height = height
+		self.l1 = None
+		self.l2 = None
+		self.n1 = None
+		self.n2 = None
+
+class Tree:
+	def __init__(self, height):
+		self.height = height
+		self.l1 = None
+		self.l2 = None
+		self.n1 = None
+		self.n2 = None
 
 #uses manhattan distance
 def calcDistanceManhattan(first, second):
@@ -9,6 +31,28 @@ def calcDistanceManhattan(first, second):
 	for i in range(len(first)):
 		tot += abs(first[i] - second[i])
 	return tot
+
+def recurseTree(curNode, myXML):
+	if(curNode.l1 != None):
+		leaf = ET.Element("leaf")
+		leaf.set("height", "0")
+		leaf.set("data", str(curNode.l1.data)[1:-1]) 
+		myXML.append(leaf)
+	else:
+		node = ET.Element("node")
+		node.set("height", str(curNode.n1.height))
+		myXML.append(node)
+		recurseTree(curNode.n1, node)
+	if(curNode.l2 != None):
+		leaf = ET.Element("leaf")
+		leaf.set("height", "0")
+		leaf.set("data", str(curNode.l2.data)[1:-1]) 
+		myXML.append(leaf)
+	else:
+		node = ET.Element("node")
+		node.set("height", str(curNode.n2.height))
+		myXML.append(node)
+		recurseTree(curNode.n2, node)
 	
 my_df = rf.read_csv()
 
@@ -27,7 +71,8 @@ minDist = 0
 minI = -1
 minJ = -1
 firstDist = 1
-edited = []
+edited = {}
+finTree = Tree(-1)
 
 #initialize distance matrix and calculate minimum distance
 for i in range(len(my_df) - 1):
@@ -56,7 +101,32 @@ for t in range(0, totalLen - 1):
 	listNums.remove(biggerIndex)
 
 	#used for end dendogram
-	edited.append(smallerIndex)
+	if(len(listNums) > 1):
+		tempNode = Node(minDist)
+		if smallerIndex in edited:
+			tempNode.n1 = edited[smallerIndex]
+		else:
+			tempL1 = Leaf(0, numToPoint[smallerIndex])
+			tempNode.l1 = tempL1
+		if biggerIndex in edited:
+			tempNode.n2 = edited[biggerIndex]
+		else:
+			tempL2 = Leaf(0, numToPoint[biggerIndex])
+			tempNode.l2 = tempL2
+		edited[smallerIndex] = tempNode
+	else:
+		finTree.height = minDist
+		if smallerIndex in edited:
+			finTree.n1 = edited[smallerIndex]
+		else:
+			tempL1 = Leaf(0, numToPoint[smallerIndex])
+			finTree.l1 = tempL1
+		if biggerIndex in edited:
+			finTree.n2 = edited[biggerIndex]
+		else:
+			tempL2 = Leaf(0, numToPoint[biggerIndex])
+			finTree.l2 = tempL2
+
 	
 	#dependent on distance formula
 	#using complete link for this implementation
@@ -100,18 +170,28 @@ for t in range(0, totalLen - 1):
 			j += 1
 		i += 1
 
-
-
-class Leaf:
-	def __init__(self, height, data):
-		self.height = height
-		self.data = data
-
-class Node:
-	def __init__(self, height):
-		self.height = height
-
-class Tree:
-	def __init__(self, height):
-		self.height = height
-
+#iterate through my tree and make a csv file
+root = ET.Element("tree")
+root.set("height", str(finTree.height))
+if(finTree.l1 != None):
+	leaf1 = ET.Element("leaf")
+	leaf1.set("height", "0")
+	leaf1.set("data", str(finTree.l1.data)[1:-1])
+	root.append(leaf1)
+else:
+	node = ET.Element("node")
+	node.set("height", str(finTree.n1.height))
+	root.append(node)
+	recurseTree(finTree.n1, node)
+if(finTree.l2 != None):
+	leaf2 = ET.Element("leaf")
+	leaf2.set("height", "0")
+	leaf2.set("data", str(finTree.l2.data)[1:-1])
+	root.append(leaf2)
+else:
+	node = ET.Element("node")
+	node.set("height", str(finTree.n2.height))
+	root.append(node)
+	recurseTree(finTree.n2, node)
+blah = ET.tostring(root, pretty_print = True).decode()
+print(blah)
