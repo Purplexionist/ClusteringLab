@@ -27,6 +27,7 @@ minDist = 0
 minI = -1
 minJ = -1
 firstDist = 1
+edited = []
 
 #initialize distance matrix and calculate minimum distance
 for i in range(len(my_df) - 1):
@@ -37,22 +38,68 @@ for i in range(len(my_df) - 1):
 			minDist = distanceMatrix.loc[i][j]
 			minI = i
 			minJ = j
+			firstDist = 0
 		if(distanceMatrix.loc[i][j] < minDist):
 			minDist = distanceMatrix.loc[i][j]
 			minI = i
 			minJ = j
 
-
-print(distanceMatrix)
 #combine the clusters
-for t in range(0, 1):
+print(distanceMatrix)
+totalLen = len(listNums)
+for t in range(0, totalLen - 1):
+	print(minI, minJ)
 	biggerIndex = max(minI, minJ)
 	smallerIndex = min(minI, minJ)
 	savedRow = distanceMatrix.loc[biggerIndex]
-	saveCol = distanceMatrix.loc[:][biggerIndex]
+	savedCol = distanceMatrix.loc[:][biggerIndex]
 	listNums.remove(biggerIndex)
+
+	#used for end dendogram
+	edited.append(smallerIndex)
+	
+	#dependent on distance formula
+	#using complete link for this implementation
+	i = 0
+	while listNums[i] != smallerIndex:
+		curMax = max(distanceMatrix.loc[listNums[i]][smallerIndex], distanceMatrix.loc[listNums[i]][biggerIndex])
+		distanceMatrix.loc[listNums[i]][smallerIndex] = curMax
+		i += 1
+	i += 1 
+	while i < len(listNums):
+		num1 = distanceMatrix.loc[smallerIndex][listNums[i]]
+		num2 = -1
+		if biggerIndex > listNums[i]:
+			num2 = distanceMatrix.loc[listNums[i]][biggerIndex]
+		else:
+			num2 = distanceMatrix.loc[biggerIndex][listNums[i]]
+		curMax = max(num1, num2)
+		distanceMatrix.loc[smallerIndex][listNums[i]] = curMax
+		i += 1
+
+	#remove old rows and columns from matrix
 	distanceMatrix = distanceMatrix.loc[listNums, listNums]
+
 	print(distanceMatrix)
+	#calculate new minimum distance
+	i = 0
+	j = 0
+	firstDist = 1
+	while i < len(listNums) - 1:
+		j = i + 1
+		while j < len(listNums):
+			if(firstDist):
+				minI = listNums[i]
+				minJ = listNums[j]
+				minDist = distanceMatrix.loc[minI][minJ]
+				firstDist = 0
+			if(distanceMatrix.loc[listNums[i]][listNums[j]] < minDist):
+				minI = listNums[i]
+				minJ = listNums[j]
+				minDist = distanceMatrix.loc[minI][minJ]
+			j += 1
+		i += 1
+
 
 
 class Leaf:
