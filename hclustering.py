@@ -29,7 +29,7 @@ class Tree:
 def calcDistanceManhattan(first, second):
 	tot = 0
 	for i in range(len(first)):
-		tot += abs(first[i] - second[i])
+		tot += abs(float(first[i]) - float(second[i]))
 	return tot
 
 def recurseTree(curNode, myXML):
@@ -40,7 +40,7 @@ def recurseTree(curNode, myXML):
 		myXML.append(leaf)
 	else:
 		node = ET.Element("node")
-		node.set("height", str(curNode.n1.height))
+		node.set("height", "{:.4f}".format(curNode.n1.height))
 		myXML.append(node)
 		recurseTree(curNode.n1, node)
 	if(curNode.l2 != None):
@@ -50,23 +50,23 @@ def recurseTree(curNode, myXML):
 		myXML.append(leaf)
 	else:
 		node = ET.Element("node")
-		node.set("height", str(curNode.n2.height))
+		node.set("height", "{:.4f}".format(curNode.n2.height))
 		myXML.append(node)
 		recurseTree(curNode.n2, node)
 	
 my_df = rf.read_csv()
-
 #create a dictionary to remember data for points
 numToPoint = {}
 for i in range(0, len(my_df)):
 	curRow = my_df.loc[i]
 	curList = []
+	print(curRow)
 	for j in range(len(curRow)):
-		curList.append(curRow.loc[j])
+		if(curRow.iloc[j] != ' '):
+			curList.append(curRow.iloc[j])
 	numToPoint[i] = curList
-
 listNums = list(range(len(my_df)))
-distanceMatrix = pd.DataFrame(0, index=np.arange(len(my_df)), columns = listNums)
+distanceMatrix = pd.DataFrame(0.0, index=np.arange(len(my_df)), columns = listNums)
 minDist = 0
 minI = -1
 minJ = -1
@@ -90,10 +90,9 @@ for i in range(len(my_df) - 1):
 			minJ = j
 
 #combine the clusters
-print(distanceMatrix)
 totalLen = len(listNums)
 for t in range(0, totalLen - 1):
-	print(minI, minJ)
+	print(distanceMatrix)
 	biggerIndex = max(minI, minJ)
 	smallerIndex = min(minI, minJ)
 	savedRow = distanceMatrix.loc[biggerIndex]
@@ -150,7 +149,6 @@ for t in range(0, totalLen - 1):
 	#remove old rows and columns from matrix
 	distanceMatrix = distanceMatrix.loc[listNums, listNums]
 
-	print(distanceMatrix)
 	#calculate new minimum distance
 	i = 0
 	j = 0
@@ -180,7 +178,7 @@ if(finTree.l1 != None):
 	root.append(leaf1)
 else:
 	node = ET.Element("node")
-	node.set("height", str(finTree.n1.height))
+	node.set("height", "{:.4f}".format(finTree.n1.height))
 	root.append(node)
 	recurseTree(finTree.n1, node)
 if(finTree.l2 != None):
@@ -190,7 +188,7 @@ if(finTree.l2 != None):
 	root.append(leaf2)
 else:
 	node = ET.Element("node")
-	node.set("height", str(finTree.n2.height))
+	node.set("height", "{:.4f}".format(finTree.n2.height))
 	root.append(node)
 	recurseTree(finTree.n2, node)
 blah = ET.tostring(root, pretty_print = True).decode()
