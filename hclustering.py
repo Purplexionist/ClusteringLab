@@ -3,6 +3,7 @@ import pandas as pd
 import sys
 import read_file as rf
 from lxml import etree as ET
+import time
 
 class Leaf:
 	def __init__(self, height, data):
@@ -31,6 +32,21 @@ def calcDistanceManhattan(first, second):
 	for i in range(len(first)):
 		tot += abs(float(first[i]) - float(second[i]))
 	return tot
+
+def difFast(listNums, tes2d):
+	minDist = 9999999999
+	ans = 0
+	minIN = -1
+	minJN = -1
+	for i in range(0, len(listNums) - 1):
+		for j in range(i + 1, len(listNums)):
+			ans = tes2d[i][j]
+			if(ans < minDist):
+				minIN = i
+				minJN = j
+				minDist = ans
+	return minIN, minJN, minDist
+
 
 def recurseTree(curNode, myXML):
 	if(curNode.l1 != None):
@@ -72,30 +88,32 @@ minJ = -1
 firstDist = 1
 edited = {}
 finTree = Tree(-1)
+tes2d = np.zeros((len(my_df), len(my_df)))
 
 #initialize distance matrix and calculate minimum distance
 for i in range(len(my_df) - 1):
 	for j in range(i + 1, len(my_df)):
 		#can try different distance measures
-		distanceMatrix.loc[i][j] = calcDistanceManhattan(numToPoint[i], numToPoint[j])
+		thisAns = calcDistanceManhattan(numToPoint[i], numToPoint[j])
+		tes2d[i][j] = thisAns
 		if(firstDist):
-			minDist = distanceMatrix.loc[i][j]
+			minDist = thisAns
 			minI = i
 			minJ = j
 			firstDist = 0
-		if(distanceMatrix.loc[i][j] < minDist):
-			minDist = distanceMatrix.loc[i][j]
+		if(thisAns < minDist):
+			minDist = thisAns
 			minI = i
 			minJ = j
 
 #combine the clusters
 totalLen = len(listNums)
 for t in range(0, totalLen - 1):
-	biggerIndex = max(minI, minJ)
-	smallerIndex = min(minI, minJ)
-	savedRow = distanceMatrix.loc[biggerIndex]
-	savedCol = distanceMatrix.loc[:][biggerIndex]
-	listNums.remove(biggerIndex)
+	bigger = max(minI, minJ)
+	smaller = min(minI, minJ)
+	biggerIndex = listNums[bigger]
+	smallerIndex = listNums[smaller]
+	del listNums[bigger]
 
 	#used for end dendogram
 	if(len(listNums) > 1):
@@ -127,44 +145,32 @@ for t in range(0, totalLen - 1):
 	
 	#dependent on distance formula
 	#using complete link for this implementation
+	biggerIndex = bigger
+	smallerIndex = smaller
 	i = 0
-	while listNums[i] != smallerIndex:
-		curMax = max(distanceMatrix.loc[listNums[i]][smallerIndex], distanceMatrix.loc[listNums[i]][biggerIndex])
-		distanceMatrix.loc[listNums[i]][smallerIndex] = curMax
+	while i != smallerIndex:
+		curMax = max(tes2d[i][smallerIndex], tes2d[i][biggerIndex])
+		tes2d[i][smallerIndex] = curMax
 		i += 1
 	i += 1 
 	while i < len(listNums):
-		num1 = distanceMatrix.loc[smallerIndex][listNums[i]]
+		num1 = tes2d[smallerIndex][i]
 		num2 = -1
-		if biggerIndex > listNums[i]:
-			num2 = distanceMatrix.loc[listNums[i]][biggerIndex]
+		if biggerIndex > i:
+			num2 = tes2d[i][biggerIndex]
 		else:
-			num2 = distanceMatrix.loc[biggerIndex][listNums[i]]
+			num2 = tes2d[biggerIndex][i]
 		curMax = max(num1, num2)
-		distanceMatrix.loc[smallerIndex][listNums[i]] = curMax
+		tes2d[smallerIndex][i] = curMax
 		i += 1
 
 	#remove old rows and columns from matrix
-	distanceMatrix = distanceMatrix.loc[listNums, listNums]
+	tes2d = np.delete(tes2d, biggerIndex, 0)
+	tes2d = np.delete(tes2d, biggerIndex, 1)
 
 	#calculate new minimum distance
-	i = 0
-	j = 0
-	firstDist = 1
-	while i < len(listNums) - 1:
-		j = i + 1
-		while j < len(listNums):
-			if(firstDist):
-				minI = listNums[i]
-				minJ = listNums[j]
-				minDist = distanceMatrix.loc[minI][minJ]
-				firstDist = 0
-			if(distanceMatrix.loc[listNums[i]][listNums[j]] < minDist):
-				minI = listNums[i]
-				minJ = listNums[j]
-				minDist = distanceMatrix.loc[minI][minJ]
-			j += 1
-		i += 1
+	if(len(listNums) > 1):
+		minI, minJ, minDist = difFast(listNums, tes2d)
 
 #iterate through my tree and make a csv file
 root = ET.Element("tree")
