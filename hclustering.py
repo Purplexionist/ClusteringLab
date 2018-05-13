@@ -55,7 +55,7 @@ def recurseTree(curNode, myXML, existNode, nodeList, k):
 		leaf.set("data", str(curNode.l1.data)[1:-1]) 
 		myXML.append(leaf)
 		if(existNode != None):
-			existNode.append(str(curNode.l1.data)[1:-1])
+			existNode.append(curNode.l1.data)
 	else:
 		node = ET.Element("node")
 		node.set("height", "{:.4f}".format(curNode.n1.height))
@@ -74,7 +74,7 @@ def recurseTree(curNode, myXML, existNode, nodeList, k):
 		leaf.set("data", str(curNode.l2.data)[1:-1]) 
 		myXML.append(leaf)
 		if(existNode != None):
-			existNode.append(str(curNode.l2.data)[1:-1])
+			existNode.append(curNode.l2.data)
 	else:
 		node = ET.Element("node")
 		node.set("height", "{:.4f}".format(curNode.n2.height))
@@ -211,7 +211,7 @@ if(finTree.l1 != None):
 	leaf1.set("data", str(finTree.l1.data)[1:-1])
 	root.append(leaf1)
 	if(nodeExist):
-		nodeList[0].append(str(finTree.l1.data)[1:-1])
+		nodeList[0].append(finTree.l1.data)
 else:
 	node = ET.Element("node")
 	node.set("height", "{:.4f}".format(finTree.n1.height))
@@ -230,7 +230,7 @@ if(finTree.l2 != None):
 	leaf2.set("data", str(finTree.l2.data)[1:-1])
 	root.append(leaf2)
 	if(nodeExist):
-		nodeList[0].append(str(finTree.l2.data)[1:-1])
+		nodeList[0].append(finTree.l2.data)
 else:
 	node = ET.Element("node")
 	node.set("height", "{:.4f}".format(finTree.n2.height))
@@ -247,4 +247,37 @@ answerString = ET.tostring(root, pretty_print = True).decode()
 f = open("answerXML.xml", "w")
 f.write(answerString)
 f.close()
-print(nodeList)
+
+clusterNum = 0
+if(len(nodeList) > 0):
+	for a in nodeList:
+		curCenter = [0]*len(numToPoint[0])
+		print("Cluster ",clusterNum,":")
+		for point in a:
+			for elem in range(len(point)):
+				curCenter[elem] += point[elem]
+		for index in range(len(numToPoint[0])):
+			curCenter[index] /= len(a)
+		print("Center: ", curCenter)
+		curMax = -1
+		curMin = 999999
+		curAvg = 0
+		sse = 0
+		for point in a:
+			offSet = calcDistanceManhattan(point, curCenter)
+			sse += offSet**2
+			curAvg += offSet
+			if(offSet > curMax):
+				curMax = offSet
+			if(offSet < curMin):
+				curMin = offSet
+		curAvg /= len(a)
+		print("Max Dist. to Center: ",curMax)
+		print("Min Dist. to Center: ",curMin)
+		print("Avg Dist. to Center: ",curAvg)
+		print("SSE: ",sse)
+		clusterNum += 1
+		print(len(a)," Points:")
+		for point in a:
+			print(point)
+		print()
