@@ -48,28 +48,52 @@ def difFast(listNums, tes2d):
 	return minIN, minJN, minDist
 
 
-def recurseTree(curNode, myXML):
+def recurseTree(curNode, myXML, existNode, nodeList, k):
 	if(curNode.l1 != None):
 		leaf = ET.Element("leaf")
 		leaf.set("height", "0")
 		leaf.set("data", str(curNode.l1.data)[1:-1]) 
 		myXML.append(leaf)
+		if(existNode != None):
+			existNode.append(curNode.l1.data)
 	else:
 		node = ET.Element("node")
 		node.set("height", "{:.4f}".format(curNode.n1.height))
 		myXML.append(node)
-		recurseTree(curNode.n1, node)
+		if(existNode != None):
+			recurseTree(curNode.n1, node, existNode, nodeList, k)
+		elif(curNode.n1.height < k):
+			innerList = []
+			nodeList.append(innerList)
+			recurseTree(curNode.n1, node, innerList, nodeList, k)
+		else:
+			recurseTree(curNode.n1, node, None, nodeList, k)
 	if(curNode.l2 != None):
 		leaf = ET.Element("leaf")
 		leaf.set("height", "0")
 		leaf.set("data", str(curNode.l2.data)[1:-1]) 
 		myXML.append(leaf)
+		if(existNode != None):
+			existNode.append(curNode.l2.data)
 	else:
 		node = ET.Element("node")
 		node.set("height", "{:.4f}".format(curNode.n2.height))
 		myXML.append(node)
-		recurseTree(curNode.n2, node)
-	
+		if(existNode != None):
+			recurseTree(curNode.n2, node, existNode, nodeList, k)
+		elif(curNode.n2.height < k):
+			innerList = []
+			nodeList.append(innerList)
+			recurseTree(curNode.n2, node, innerList, nodeList, k)
+		else:
+			recurseTree(curNode.n2, node, None, nodeList, k)
+
+k = -1
+if(len(sys.argv) > 2):
+	k = float(sys.argv[2])
+if(len(sys.argv) == 1 or len(sys.argv) > 3):
+	print("Usage: py hclustering.py <dataset.csv> [thresh]")
+	exit()
 my_df = rf.read_csv()
 #create a dictionary to remember data for points
 numToPoint = {}
@@ -81,7 +105,6 @@ for i in range(0, len(my_df)):
 			curList.append(curRow.iloc[j])
 	numToPoint[i] = curList
 listNums = list(range(len(my_df)))
-distanceMatrix = pd.DataFrame(0.0, index=np.arange(len(my_df)), columns = listNums)
 minDist = 0
 minI = -1
 minJ = -1
@@ -173,29 +196,88 @@ for t in range(0, totalLen - 1):
 		minI, minJ, minDist = difFast(listNums, tes2d)
 
 #iterate through my tree and make a csv file
+
+nodeList = []
+nodeExist = 0
 root = ET.Element("tree")
 root.set("height", str(finTree.height))
+if(finTree.height < k):
+	innerList = []
+	nodeList.append(innerList)
+	nodeExist = 1
 if(finTree.l1 != None):
 	leaf1 = ET.Element("leaf")
 	leaf1.set("height", "0")
 	leaf1.set("data", str(finTree.l1.data)[1:-1])
 	root.append(leaf1)
+	if(nodeExist):
+		nodeList[0].append(finTree.l1.data)
 else:
 	node = ET.Element("node")
 	node.set("height", "{:.4f}".format(finTree.n1.height))
 	root.append(node)
-	recurseTree(finTree.n1, node)
+	if(nodeExist):
+		recurseTree(finTree.n1, node, nodeList[0], nodeList, k)
+	elif(finTree.n1.height < k):
+		newInner = []
+		nodeList.append(newInner)
+		recurseTree(finTree.n1, node, newInner, nodeList, k)
+	else:
+		recurseTree(finTree.n1, node, None, nodeList, k)
 if(finTree.l2 != None):
 	leaf2 = ET.Element("leaf")
 	leaf2.set("height", "0")
 	leaf2.set("data", str(finTree.l2.data)[1:-1])
 	root.append(leaf2)
+	if(nodeExist):
+		nodeList[0].append(finTree.l2.data)
 else:
 	node = ET.Element("node")
 	node.set("height", "{:.4f}".format(finTree.n2.height))
 	root.append(node)
-	recurseTree(finTree.n2, node)
+	if(nodeExist):
+		recurseTree(finTree.n2, node, nodeList[0], nodeList, k)
+	elif(finTree.n2.height < k):
+		newInner = []
+		nodeList.append(newInner)
+		recurseTree(finTree.n2, node, newInner, nodeList, k)
+	else:
+		recurseTree(finTree.n2, node, None, nodeList, k)
 answerString = ET.tostring(root, pretty_print = True).decode()
 f = open("answerXML.xml", "w")
 f.write(answerString)
 f.close()
+
+clusterNum = 0
+if(len(nodeList) > 0):
+	for a in nodeList:
+		curCenter = [0]*len(numToPoint[0])
+		print("Cluster ",clusterNum,":")
+		for point in a:
+			for elem in range(len(point)):
+				curCenter[elem] += point[elem]
+		for index in range(len(numToPoint[0])):
+			curCenter[index] /= len(a)
+		print("Center: ", curCenter)
+		curMax = -1
+		curMin = 999999
+		curAvg = 0
+		sse = 0
+		for point in a:
+			offSet = calcDistanceManhattan(point, curCenter)
+			sse += offSet**2
+			curAvg += offSet
+			if(offSet > curMax):
+				curMax = offSet
+			if(offSet < curMin):
+				curMin = offSet
+		curAvg /= len(a)
+		print("Max Dist. to Center: ",curMax)
+		print("Min Dist. to Center: ",curMin)
+		print("Avg Dist. to Center: ",curAvg)
+		print("SSE: ",sse)
+		clusterNum += 1
+		print(len(a)," Points:")
+		for point in a:
+			print(point)
+		print()
