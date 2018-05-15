@@ -28,6 +28,14 @@ Pick x in D, put x in Queue
 x' <- Dequeue(Queue)
 if x' is a core point
 """
+
+
+
+#RUN WITH:
+#python dbscan.py file.csv epsilon minPts
+
+#How to get 4 clusters with a little noise:
+#python dbscan 4clusters.csv 5 2
 import sys
 import pandas as pd
 
@@ -48,14 +56,14 @@ def find_close_points(df, d, epsilon):
 
 def density_connected(df,ind,core,currentCluster):
 	N_epsilon_point = close_points[ind]
-	print(ind, N_epsilon_point)
 	for d in N_epsilon_point:
+		
 		if cluster[d] != -1:
-			return
+			continue
 		cluster[d] = currentCluster
 		if d in core:
 			density_connected(df,d,core,currentCluster)
-
+	return
 
 def find_points_in_cluster(cluster,k):
 	cluster_k = []
@@ -70,15 +78,14 @@ def dbscan(df,epsilon,numPoints):
 	core = []
 	#find core points
 	for ind in df.index:
-		i = int(ind)
-		d = df.iloc[i,:]
+		#This line could be a future problem
+		i = ind
+		d = df.loc[i,:]
 		N_epsilon_d = find_close_points(df.drop(i), d, epsilon)
 		close_points[i] = N_epsilon_d
 		cluster[i] = -1
 		if(len(N_epsilon_d) >= numPoints):
 			core.append(i)
-	print("Core points: ") 
-	print(core)
 
 	currentCluster = 0
 
@@ -96,14 +103,23 @@ def dbscan(df,epsilon,numPoints):
 
 	noise = find_points_in_cluster(cluster,-1)
 
+
+
 	print("List of Clusters:")
-	print(clusterList)
+	for i in range(len(clusterList)):
+		clust = clusterList[i]
+		df_clust = df.loc[clust,:]
+		centroid = df_clust.mean()
+		print("\tCluster " + str(i+1) +": " + str(clust))
+		print("\t\tNumber of points: " + str(len(clust)))
+		print("\t\tCentroid: (" + str(centroid[0].round(2)) + "," + str(centroid[1].round(2)) + ")")
+
 	print("Noise:")
 	print(noise)
-	all_points = list(df.index.map(int))
-	boundary = [item for item in all_points if item not in noise and item not in core]
+	all_points = list(df.index)
+	border = [item for item in all_points if item not in noise and item not in core]
 	print("Border:")
-	print(boundary)
+	print(border)
 
 		
 	
@@ -119,7 +135,10 @@ def main():
 	for i in range(len(binary_vector)-1,-1,-1):
 		val = binary_vector[i]
 		if val == 0:
-			df = df.drop(i,axis=1)
+			if i == 0:
+				df = df.set_index(0)
+			else:
+				df = df.drop(i,axis=1)
 
 	dbscan(df,epsilon,numPoints)
 

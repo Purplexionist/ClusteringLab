@@ -49,6 +49,11 @@ def main():
         for i, c in enumerate(clusters):
             print('Cluster', i + 1, ':')
             print('Center:', centroids[i])
+
+            if len(c) == 0:
+                print("Empty Cluster\n")
+                continue
+
             minDist, maxDist, avgDist = getDistFromCenter(c, centroids[i])
             print("Max Dist. to Center:", maxDist)
             print("Min Dist. to Center:", minDist)
