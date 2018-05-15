@@ -4,6 +4,8 @@ import sys
 import read_file as rf
 from lxml import etree as ET
 import time
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class Leaf:
 	def __init__(self, height, data):
@@ -250,6 +252,12 @@ f.close()
 
 clusterNum = 0
 if(len(nodeList) > 0):
+	colors = 100//len(nodeList)
+	curColor = 1
+	xList = []
+	yList = []
+	zList = []
+	cList = []
 	for a in nodeList:
 		curCenter = [0]*len(numToPoint[0])
 		print("Cluster ",clusterNum,":")
@@ -279,5 +287,24 @@ if(len(nodeList) > 0):
 		clusterNum += 1
 		print(len(a)," Points:")
 		for point in a:
+			if(len(point) <= 3):
+				xList.append(point[0])
+				yList.append(point[1])
+				cList.append(curColor)
+				if(len(point) == 3):
+					zList.append(point[2])
 			print(point)
 		print()
+		curColor += colors
+
+if(len(nodeList) > 0 and len(nodeList[0][0]) == 2):
+	plt.scatter(xList, yList, c = cList)
+	plt.show()
+if(len(nodeList) > 0 and len(nodeList[0][0]) == 3):
+	fig = plt.figure()
+	ax = fig.add_subplot(111, projection='3d')
+	ax.scatter(xList, yList, zList, c = cList)
+	ax.set_xlabel('X Label')
+	ax.set_ylabel('Y Label')
+	ax.set_zlabel('Z Label')
+	plt.show()
